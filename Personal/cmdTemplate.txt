@@ -1,0 +1,15 @@
+module.exports = {
+  name: "REQUIRED",
+  description: "REQUIRED",
+  usage: "OPTIONAL",
+  aliases: ['OPTIONAL'],
+  permissions: ['OPTIONAL'],
+  botPerms: ['OPTIONAL'],
+  cooldown: 0, // Optional
+  deleteAfter: 0, // Optional (-1 = dont delete | 0 = insta delete | 0> = delete after x seconds)
+  async execute(message, args, cmd, client, Discord, prefix, profileData, profileModel, serverData, serverModel) {
+
+    
+
+  }
+}
