@@ -60,12 +60,12 @@ module.exports = async (client, Discord, message) => {
     }
 
     let prefix = serverData.prefix;
-    
+
     const args = message.content.slice(prefix.length).split(/ +/);
     const cmd = args.shift().toLowerCase();
-    
+
     const command = client.commands.get(cmd) || client.commands.find(a => a.aliases && a.aliases.includes(cmd))
-    
+
     if (!message.content.startsWith(prefix) || message.author.bot || !command) return;
 
     //Bot Perms
@@ -113,11 +113,8 @@ module.exports = async (client, Discord, message) => {
 
     //AutoDelete
     if (command.deleteAfter > 0) {
-        setTimeout(function() {
-            message.delete();
-        }, command.deleteAfter * 1000)
-    }
-    if (command.deleteAfter == 0) {
+        message.delete(command.deleteAfter * 1000);
+    } else if (command.deleteAfter == 0) {
         message.delete();
     }
 
@@ -163,7 +160,18 @@ module.exports = async (client, Discord, message) => {
                 const cooldownEmbed = new Discord.MessageEmbed()
                     .setColor("RED")
                     .setTitle("Slow Down!")
-                    .setDescription(`Sorry your on cooldown for ${time_left.toFixed(1)} more second[s]!`)
+
+                if (time_left.toFixed(1) >= 3600) {
+                    let hour = (time_left.toFixed(1) / 3600);
+                    cooldownEmbed.setDescription(`Sorry your on cooldown for ${hour} more hour[s]!`)
+                }
+                if (time_left.toFixed(1) >= 60) {
+                    let minute = (time_left.toFixed(1) / 60);
+                    cooldownEmbed.setDescription(`Sorry your on cooldown for ${minute} more minute[s]!`)
+                }
+                let seconds = (time_left.toFixed(1));
+                cooldownEmbed.setDescription(`Sorry your on cooldown for ${seconds} more second[s]!`)
+
 
                 return message.channel.send(cooldownEmbed).then(msg => {
                     msg.delete(5000)
@@ -171,17 +179,18 @@ module.exports = async (client, Discord, message) => {
             }
         }
 
-        // Add cooldown
-        time_stamps.set(message.author.id, current_time)
 
-        // Reset Cooldown
-        setTimeout(() => time_stamps.delete(message.author.id), cooldown_amount)
     }
-
+    
     try {
         command.execute(message, args, cmd, client, Discord, prefix, profileData, profileModel, serverData, serverModel);
     } catch (err) {
-        message.channel.send("There was an error running that command!")
+        const errorRunCmd = new Discord.MessageEmbed()
+            .setColor("RED")
+            .setTitle("Error")
+            .setDescription(`Sorry there was an error running that command!`)
+        message.channel.send(errorRunCmd)
         console.log(err);
     }
+
 }

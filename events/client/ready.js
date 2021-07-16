@@ -3,6 +3,9 @@ const jsonfile = require('jsonfile');
 
 module.exports = async (client, Discord) => {
     console.log('Bot is online!')
+    client.user.setActivity('>help | .gg/pfZATvy3Fs', {
+      type: 'PLAYING'
+    });
 
     // Help commands
     var dirs = {}

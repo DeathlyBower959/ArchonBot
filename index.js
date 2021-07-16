@@ -1,7 +1,5 @@
 //REPLIT
-// const { cc } = require("discord.js");
-// const keepAlive = require('./server.js');
-// const c = new Client({ disableEveryone: true });
+const keepAlive = require('./server.js');
 
 const Discord = require('discord.js');
 const jsonfile = require('jsonfile');
@@ -13,6 +11,7 @@ const client = new Discord.Client();
 
 client.commands = new Discord.Collection();
 client.events = new Discord.Collection();
+client.others = new Discord.Collection();
 
 ['command_handler', 'event_handler'].forEach(handler => {
     require(`./handlers/${handler}`)(client, Discord);
@@ -30,5 +29,5 @@ mongoose.connect(process.env.MONGODB_SRV, {
 })
 
 //REPLIT
-// keepAlive();
+keepAlive();
 client.login(process.env.TOKEN)
