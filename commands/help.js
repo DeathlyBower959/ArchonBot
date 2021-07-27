@@ -7,6 +7,7 @@ module.exports = {
   description: "Lists all avaliable bot commands",
   aliases: ['h'],
   autoDelete: true,
+  cooldown: 5,
   async execute(message, args, cmd, client, Discord, prefix, profileData) {
 
     const dirs = jsonfile.readFileSync('./dirs.json')

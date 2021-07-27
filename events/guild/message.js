@@ -37,9 +37,42 @@ const validPermissions = [
     "MANAGE_EMOJIS",
 ]
 
+const checkLevel = async (message, client, Discord, profileData, profileModel) => {
+    let xp = profileData.xp;
+    let lvl = profileData.level;
+
+    const neededForNextLevel = 5 * (lvl ^ 2) + (50 * lvl) + 100;
+
+    const randomNumber = Math.floor(Math.random() * 13) + 1
+
+    await profileModel.findOneAndUpdate({
+        userID: message.author.id
+    }, {
+        $inc: {
+            xp: randomNumber
+        }
+    })
+
+    if (xp >= neededForNextLevel) {
+        const add = xp - neededForNextLevel;
+        await profileModel.findOneAndUpdate({
+            userID: message.author.id
+        }, {
+            $inc: {
+                level: 1
+            },
+            $set: {
+                xp: add
+            }
+        })
+    }
+}
+
 module.exports = async (client, Discord, message) => {
 
-    //Mongo Checking
+    if (message.author.bot) return;
+
+    //Server  Data MongoDB
     let serverData;
     try {
         serverData = await serverModel.findOne({
@@ -58,85 +91,121 @@ module.exports = async (client, Discord, message) => {
     } catch (err) {
         console.log(err)
     }
+    console.log(`-----------------\n\n${serverData}\n\n-----------------`)
+
+    //Profile Data MongoDB
+    let profileData;
+    try {
+        profileData = await profileModel.findOne({
+            userID: message.author.id,
+            serverID: message.guild.id
+        })
+        if (!profileData) {
+            let profile = await profileModel.create({
+                userID: message.author.id,
+                serverID: message.guild.id,
+                xp: 0,
+                level: 0,
+                coins: 100,
+                bank: 0
+            })
+            profile.save();
+            profileData = await profileModel.findOne({
+                userID: message.author.id,
+                serverID: message.guild.id
+            })
+        }
+    } catch (err) {
+        console.log(err)
+    }
+
+    console.log(`-----------------\n\n${profileData}\n\n-----------------`)
+
+
+    checkLevel(message, client, Discord, profileData, profileModel)
 
     let prefix = serverData.prefix;
+
+    //Check if message mentions bot only
+    if (message.content === `<@!${message.client.user.id}>` || message.content === `<@${message.client.user.id}>`) {
+        message.delete();
+        const forgotPrefixEmbed = new Discord.MessageEmbed()
+            .setColor("YELLOW")
+            .setTitle("Oops!")
+            .setDescription(`Looks like you forgot the prefix! \nMy prefix is \`${prefix}\``)
+        return message.channel.send(forgotPrefixEmbed).then(msg => {
+            msg.delete({
+                timeout: 8000
+            })
+        });
+    }
 
     const args = message.content.slice(prefix.length).split(/ +/);
     const cmd = args.shift().toLowerCase();
 
     const command = client.commands.get(cmd) || client.commands.find(a => a.aliases && a.aliases.includes(cmd))
 
-    if (!message.content.startsWith(prefix) || message.author.bot || !command) return;
+    if (!message.content.startsWith(prefix) || !command) return;
 
     //Bot Perms
+    let missingPerms = [];
+    let requiredPerms = [];
     if (command.botPerms) {
-        let invalidPerms = []
-        for (const perm of command.botPerms) {
-            if (!validPermissions.includes(perm)) {
-                return console.log(`Invalid Permission ${perm} in ${command.name}`)
-            }
-            if (!client.user.hasPermission(perm)) {
-                invalidPerms.push(perm)
-            }
-        }
-        if (invalidPerms.length) {
-            const missingPermsEmbed = new Discord.MessageEmbed()
-                .setColor("RED")
-                .setTitle("Error")
-                .setDescription(`Sorry, there was an error running that command! I am missing the permission[s]\n\`${invalidPerms}\``)
+        requiredPerms = command.botPerms;
+    }
+    requiredPerms.push("SEND_MESSAGES");
+    requiredPerms.push("EMBED_LINKS");
+    requiredPerms.push("USE_EXTERNAL_EMOJIS");
+    requiredPerms.push("READ_MESSAGE_HISTORY");
 
-            return message.channel.send(missingPermsEmbed).then(msg => {
-                msg.delete(5000)
-            })
+    for (const perm of requiredPerms) {
+        if (!validPermissions.includes(perm)) {
+            return console.log(`Invalid Permission ${perm} in ${command.name}`)
+        }
+        if (!message.channel.permissionsFor(message.guild.me).has(perm)) {
+            missingPerms.push(perm)
         }
     }
+    if (missingPerms.length) {
+        const missingPermsEmbed = new Discord.MessageEmbed()
+            .setColor("RED")
+            .setTitle("Error")
+            .setDescription(`Sorry, there was an error running that command! I am missing the permission[s]\n${missingPerms.map(p => `\`${p}\``).join(", ")}`)
 
-    //Mongo Checking
-    let profiledata;
-    try {
-        profileData = await profileModel.findOne({
-            userID: message.author.id
-        })
-        if (!profileData) {
-            let profile = await profileModel.create({
-                userID: message.author.id,
-                serverID: message.guild.id,
-                level: 0,
-                coins: 100,
-                bank: 0
-            })
-            profile.save();
-        }
-    } catch (err) {
-        console.log(err)
+
+        return message.author.send(missingPermsEmbed)
     }
 
     //AutoDelete
     if (command.deleteAfter > 0) {
-        message.delete(command.deleteAfter * 1000);
+        message.delete({
+            timeout: command.deleteAfter * 1000
+        });
     } else if (command.deleteAfter == 0) {
         message.delete();
     }
 
-    //Permissions
+    //User Perms
     if (command.permissions) {
-        let invalidPerms = []
+        let missingPerms = []
         for (const perm of command.permissions) {
             if (!validPermissions.includes(perm)) {
                 return console.log(`Invalid Permission ${perm} in ${command.name}`)
             }
             if (!message.member.hasPermission(perm)) {
-                invalidPerms.push(perm)
+                missingPerms.push(perm)
             }
         }
-        if (invalidPerms.length) {
+        if (missingPerms.length) {
             const missingPermsEmbed = new Discord.MessageEmbed()
                 .setColor("RED")
                 .setTitle("Error")
-                .setDescription(`Sorry you are missing these permission[s]\n\`${invalidPerms}\``)
+                .setDescription(`Sorry you are missing these permission[s]\n${missingPerms.map(p => `\`${p}\``).join(", ")}`)
 
             return message.channel.send(missingPermsEmbed).then(msg => {
-                msg.delete(5000)
+                msg.delete({
+                    timeout: 15000
+                })
             })
         }
     }
@@ -159,29 +228,35 @@ module.exports = async (client, Discord, message) => {
 
                 const cooldownEmbed = new Discord.MessageEmbed()
                     .setColor("RED")
+                    .setDescription("")
                     .setTitle("Slow Down!")
 
                 if (time_left.toFixed(1) >= 3600) {
-                    let hour = (time_left.toFixed(1) / 3600);
+                    let hour = (time_left / 3600).toFixed(1);
                     cooldownEmbed.setDescription(`Sorry your on cooldown for ${hour} more hour[s]!`)
-                }
-                if (time_left.toFixed(1) >= 60) {
-                    let minute = (time_left.toFixed(1) / 60);
+                } else if (time_left.toFixed(1) >= 60) {
+                    let minute = (time_left / 60).toFixed(1);
                     cooldownEmbed.setDescription(`Sorry your on cooldown for ${minute} more minute[s]!`)
+                } else {
+
+                    let seconds = time_left.toFixed(1);
+                    cooldownEmbed.setDescription(`Sorry your on cooldown for ${seconds} more second[s]!`)
                 }
-                let seconds = (time_left.toFixed(1));
-                cooldownEmbed.setDescription(`Sorry your on cooldown for ${seconds} more second[s]!`)
 
 
                 return message.channel.send(cooldownEmbed).then(msg => {
-                    msg.delete(5000)
+                    msg.delete({
+                        timeout: 5000
+                    })
                 })
             }
         }
 
+        time_stamps.set(message.author.id, current_time)
+        setTimeout(() => time_stamps.delete(message.author.id), cooldown_amount)
 
     }
-    
+
     try {
         command.execute(message, args, cmd, client, Discord, prefix, profileData, profileModel, serverData, serverModel);
     } catch (err) {
