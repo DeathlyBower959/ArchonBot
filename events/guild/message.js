@@ -91,19 +91,16 @@ module.exports = async (client, Discord, message) => {
     } catch (err) {
         console.log(err)
     }
-    console.log(`-----------------\n\n${serverData}\n\n-----------------`)
 
     //Profile Data MongoDB
     let profileData;
     try {
         profileData = await profileModel.findOne({
             userID: message.author.id,
-            serverID: message.guild.id
         })
         if (!profileData) {
             let profile = await profileModel.create({
                 userID: message.author.id,
-                serverID: message.guild.id,
                 xp: 0,
                 level: 0,
                 coins: 100,
@@ -112,14 +109,11 @@ module.exports = async (client, Discord, message) => {
             profile.save();
             profileData = await profileModel.findOne({
                 userID: message.author.id,
-                serverID: message.guild.id
             })
         }
     } catch (err) {
         console.log(err)
     }
-
-    console.log(`-----------------\n\n${profileData}\n\n-----------------`)
 
 
     checkLevel(message, client, Discord, profileData, profileModel)
