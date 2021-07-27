@@ -28,7 +28,7 @@ module.exports = async (client, Discord) => {
                 dirs[dir.substring(1)][fileName] = {
                     "Description": desc,
                     "Usage": usage,
-                    "Aliases": alia
+                    "Aliases": alia.map(p => `${p}`).join(", ")
                 }
             } else if (usage) {
                 dirs[dir.substring(1)][fileName] = {
@@ -38,7 +38,7 @@ module.exports = async (client, Discord) => {
             } else if (alia) {
                 dirs[dir.substring(1)][fileName] = {
                     "Description": desc,
-                    "Aliases": alia
+                    "Aliases": alia.map(p => `${p}`).join(", ")
                 }
             } else {
               dirs[dir.substring(1)][fileName] = {

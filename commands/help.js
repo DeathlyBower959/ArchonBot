@@ -35,9 +35,12 @@ module.exports = {
       //Loop through all commands in specified directory
       Object.keys(dirs[dirName]).forEach((fileName) => {
         
-        var desc = client.commands.get(fileName).description
-        var usage = client.commands.get(fileName).usage
-        var alia = client.commands.get(fileName).aliases
+        // var desc = client.commands.get(fileName).description
+        // var usage = client.commands.get(fileName).usage
+        // var alia = client.commands.get(fileName).aliases
+        var desc = dirs[dirName][fileName]["Description"]
+        var usage = dirs[dirName][fileName]["Usage"]
+        var alia = dirs[dirName][fileName]["Aliases"]
 
         if (usage && alia) {
           pages[dirIndex] += `\n**${prefix}${fileName}**\nDescription: ${desc}\nUsage: ${usage}\nAliases: ${alia}\n`
