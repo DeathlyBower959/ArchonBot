@@ -6,9 +6,9 @@ module.exports = {
   name: "help",
   description: "Lists all avaliable bot commands",
   aliases: ['h'],
-  autoDelete: true,
+  deleteAfter: 0,
   cooldown: 5,
-  async execute(message, args, cmd, client, Discord, prefix, profileData) {
+  async execute(message, args, cmd, client, Discord, prefix, profileData, profileModel, serverData, serverModel) {
 
     const dirs = jsonfile.readFileSync('./dirs.json')
 
@@ -99,7 +99,7 @@ module.exports = {
         reaction.users.remove(user);
         if (page === 1) return; //Make sure on the first page, and return so you cant go back.
         page = 1;
-        helpEmbed.setTitle(dirNames[page - 1]);
+        helpEmbed.setTitle('Help Page - ' + dirNames[page - 1]);
         helpEmbed.setDescription(pages[page - 1]);
         helpEmbed.setFooter(`Page ${page} of ${pages.length}`);
         msg.edit(helpEmbed)
@@ -120,7 +120,7 @@ module.exports = {
         reaction.users.remove(user);
         if (page === pages.length) return; //Make sure on the last page, and return so you cant go forward.
         page++; //If it can go forward, move forward a page number
-        helpEmbed.setTitle(dirNames[page - 1]);
+        helpEmbed.setTitle('Help Page - ' + dirNames[page - 1]);
         helpEmbed.setDescription(pages[page - 1]);
         helpEmbed.setFooter(`Page ${page} of ${pages.length}`);
         msg.edit(helpEmbed);
@@ -130,7 +130,7 @@ module.exports = {
         reaction.users.remove(user);
         if (page === pages.length) return; //Make sure on the last page, and return so you cant go forward.
         page = pages.length
-        helpEmbed.setTitle(dirNames[page - 1]);
+        helpEmbed.setTitle('Help Page - ' + dirNames[page - 1]);
         helpEmbed.setDescription(pages[page - 1]);
         helpEmbed.setFooter(`Page ${page} of ${pages.length}`);
         msg.edit(helpEmbed)

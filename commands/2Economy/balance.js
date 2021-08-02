@@ -3,7 +3,6 @@ module.exports = {
   description: "Returns your current amount of coins!",
   aliases: ['bal'],
   cooldown: 5, // Optional
-  autoDelete: true, // Optional
   deleteAfter: 0, // Optional (-1 = dont delete | 0 = insta delete | 0> = delete after x seconds)
   async execute(message, args, cmd, client, Discord, prefix, profileData) {
 

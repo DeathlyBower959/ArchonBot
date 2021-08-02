@@ -17,6 +17,20 @@ const applyText = (canvas, text) => {
 	return context.font;
 };
 
+const applyCornerTextX = (canvas, text, xp) => {
+	const context = canvas.getContext('2d');
+
+  let xPos;
+
+  if (!xp) {
+    xPos = canvas.width - context.measureText(text).width - 10
+  } else {
+    xPos = canvas.width - context.measureText(text).width - 35
+  }
+  
+	return xPos;
+};
+
 module.exports = {
   name: "rank",
   description: "Returns your current rank!",
@@ -36,11 +50,27 @@ module.exports = {
     ctx.fillStyle = '#ffffff';
     ctx.fillText(message.author.username, 225, 125);
 
+    //Rank
+    ctx.font = '30px sans-serif'
+    ctx.fillStyle = '#9c9c9c';
+    ctx.fillText(`Rank #NotImplemented`, applyCornerTextX(canvas, `Rank #NotImplemented`, false), 35);
+
+    //Level
+    ctx.font = '28px sans-serif'
+    ctx.fillStyle = '#9c9c9c';
+    ctx.fillText(`Level: ${profileData.level}`, applyCornerTextX(canvas, `Level: ${profileData.level}`, false), 70);
+
+    //Xp
+    ctx.font = '25px sans-serif'
+    ctx.fillStyle = '#9c9c9c';
+    ctx.fillText(`Xp: ${profileData.xp}`, applyCornerTextX(canvas, `Xp: ${profileData.xp}`, true), 228);
+
+
     const avatar = await loadImage(message.author.displayAvatarURL({ format: 'jpg' }));
     let avatarSize = 150
     let avatarLocationX = 40
     let avatarLocationY = 50
-    ctx.arc(avatarLocationX + avatarSize/2, avatarLocationY + avatarSize/2, avatarSize/2 + 10, 0, Math.PI * 2);
+    ctx.arc(avatarLocationX + avatarSize/2, avatarLocationY + avatarSize/2, avatarSize/2 + 8, 0, Math.PI * 2);
     ctx.fillStyle = "#232323";
     ctx.fill();
     // Pick up the pen

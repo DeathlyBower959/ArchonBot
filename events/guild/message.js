@@ -38,6 +38,7 @@ const validPermissions = [
 ]
 
 const checkLevel = async (message, client, Discord, profileData, profileModel) => {
+    if (!message.guild) return
     let xp = profileData.xp;
     let lvl = profileData.level;
 
@@ -72,7 +73,7 @@ module.exports = async (client, Discord, message) => {
 
     if (message.author.bot) return;
 
-    //Server  Data MongoDB
+        //Server Data MongoDB
     let serverData;
     try {
         serverData = await serverModel.findOne({
@@ -115,11 +116,8 @@ module.exports = async (client, Discord, message) => {
         console.log(err)
     }
 
-
-    checkLevel(message, client, Discord, profileData, profileModel)
-
     let prefix = serverData.prefix;
-
+    
     //Check if message mentions bot only
     if (message.content === `<@!${message.client.user.id}>` || message.content === `<@${message.client.user.id}>`) {
         message.delete();
@@ -133,6 +131,8 @@ module.exports = async (client, Discord, message) => {
             })
         });
     }
+
+    checkLevel(message, client, Discord, profileData, profileModel)
 
     const args = message.content.slice(prefix.length).split(/ +/);
     const cmd = args.shift().toLowerCase();
